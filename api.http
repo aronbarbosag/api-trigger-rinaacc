@@ -1,0 +1,21 @@
+@host = http://localhost:8000
+@initial_date = 2026-05-01
+@final_date = 2026-05-18
+@term = HISL
+
+###
+# Healthcheck
+GET {{host}}/health
+
+###
+# Trigger items with default search terms: trigger, gatilho, gatinho
+GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date}}
+
+###
+# Trigger items with one custom term
+GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date}}&term={{term}}
+
+###
+# Trigger items with multiple custom terms
+GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date}}&term=HISL&term=trigger&term=gatilho
+
