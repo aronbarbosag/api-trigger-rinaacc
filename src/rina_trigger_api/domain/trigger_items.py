@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-DEFAULT_SEARCH_TERMS = ("trigger", "gatilho", "gatilhos", "gatinho")
+DEFAULT_SEARCH_TERMS = ("trigger", "gatilho", "gatilhos", "acionamento")
 
 
 @dataclass(frozen=True)
