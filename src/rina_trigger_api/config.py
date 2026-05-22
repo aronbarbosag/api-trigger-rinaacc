@@ -11,6 +11,8 @@ class Settings:
     username: str
     password: str
     base_url: str = "https://api.rinaacc.com.br"
+    rate_limit_requests: int = 30
+    rate_limit_window_seconds: int = 60
 
 
 def load_settings() -> Settings:
@@ -24,5 +26,19 @@ def load_settings() -> Settings:
         username=username or "",
         password=password or "",
         base_url=os.getenv("RINA_BASE_URL", "https://api.rinaacc.com.br"),
+        rate_limit_requests=positive_int_env("RATE_LIMIT_REQUESTS", 30),
+        rate_limit_window_seconds=positive_int_env("RATE_LIMIT_WINDOW_SECONDS", 60),
     )
 
+
+def positive_int_env(name: str, default: int) -> int:
+    raw_value = os.getenv(name)
+    if raw_value is None:
+        return default
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a positive integer.") from exc
+    if value <= 0:
+        raise RuntimeError(f"{name} must be a positive integer.")
+    return value

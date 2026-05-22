@@ -21,9 +21,9 @@ from .domain.trigger_items import (
 class RinaClientProtocol(Protocol):
     def get_reports(self) -> list[dict[str, Any]]: ...
 
-    def get_current_accompaniment(self, report_id: str) -> dict[str, Any]: ...
+    def get_current_accompaniment(self, accompaniment_id: str) -> dict[str, Any]: ...
 
-    def get_previous_accompaniment(self, report_id: str) -> dict[str, Any]: ...
+    def get_previous_accompaniment(self, accompaniment_id: str) -> dict[str, Any]: ...
 
 
 class TriggerItemService:
@@ -56,20 +56,22 @@ class TriggerItemService:
         return rows
 
     def _items_for(self, report: dict[str, Any], ids_key: str, source: str) -> list[dict[str, Any]]:
-        rid = report_id(report)
-        if not rid or not accompaniment_ids(report, ids_key):
+        if not report_id(report):
             return []
-        try:
-            payload = (
-                self.client.get_current_accompaniment(rid)
-                if source == "current"
-                else self.client.get_previous_accompaniment(rid)
-            )
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code == 500:
-                return []
-            raise
-        return extract_accompaniment_items(payload)
+        items: list[dict[str, Any]] = []
+        for accompaniment_id in accompaniment_ids(report, ids_key):
+            try:
+                payload = (
+                    self.client.get_current_accompaniment(accompaniment_id)
+                    if source == "current"
+                    else self.client.get_previous_accompaniment(accompaniment_id)
+                )
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code == 500:
+                    continue
+                raise
+            items.extend(extract_accompaniment_items(payload))
+        return items
 
 
 def date_in_range(

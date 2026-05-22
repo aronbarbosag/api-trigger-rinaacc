@@ -18,6 +18,7 @@ from rina_trigger_api.domain.trigger_items import (
 def test_item_matches_trigger_terms_in_title_or_description_with_normalization():
     assert item_matches_trigger_terms({"title": " Engine TRIGGER inspection "})
     assert item_matches_trigger_terms({"description": "Acionar gatilho de revisao"})
+    assert item_matches_trigger_terms({"title": "Gatilhos operacionais"})
     assert item_matches_trigger_terms({"title": "Gatínho operacional"})
     assert not item_matches_trigger_terms({"title": "Inspecao comum", "description": "Sem termo alvo"})
 
