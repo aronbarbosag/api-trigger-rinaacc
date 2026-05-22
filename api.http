@@ -8,7 +8,7 @@
 GET {{host}}/health
 
 ###
-# Trigger items with default search terms: trigger, gatilho, gatinho
+# Trigger items with default search terms: trigger, gatilho, gatilhos, gatinho
 GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date}}
 
 ###
@@ -18,4 +18,3 @@ GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date
 ###
 # Trigger items with multiple custom terms
 GET {{host}}/trigger-items?initial_date={{initial_date}}&final_date={{final_date}}&term=HISL&term=trigger&term=gatilho
-

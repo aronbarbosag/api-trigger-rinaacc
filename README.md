@@ -10,6 +10,8 @@ Crie um `.env` local a partir de `.env.example`. O `.env` contem credenciais rea
 USERNAME=seu_usuario
 PASSWORD=sua_senha
 RINA_BASE_URL=https://api.rinaacc.com.br
+RATE_LIMIT_REQUESTS=30
+RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 ## Rodando
@@ -48,7 +50,11 @@ Filtros opcionais:
 
 - `initial_date`: data inicial da auditoria/publicacao, por exemplo `2026-05-01`
 - `final_date`: data final da auditoria/publicacao, por exemplo `2026-05-15`
-- `term`: termo pesquisado no titulo ou descricao. Pode ser repetido, por exemplo `?term=HISL&term=vane`. Quando omitido, usa `trigger`, `gatilho` e `gatinho`.
+- `term`: termo pesquisado no titulo ou descricao. Pode ser repetido, por exemplo `?term=HISL&term=vane`. Quando omitido, usa `trigger`, `gatilho`, `gatilhos` e `gatinho`.
+
+`/trigger-items` aplica um limite simples em memoria por processo. O padrao e
+`30` requisicoes a cada `60` segundos e pode ser ajustado com
+`RATE_LIMIT_REQUESTS` e `RATE_LIMIT_WINDOW_SECONDS`.
 
 Resposta:
 

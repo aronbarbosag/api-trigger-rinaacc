@@ -26,16 +26,16 @@ def test_client_logs_in_and_fetches_reports_from_result_envelope():
     assert seen[1].headers["Authorization"] == "token-123"
 
 
-def test_client_fetches_current_and_previous_accompaniment_objects():
+def test_client_fetches_current_and_previous_accompaniment_objects_from_detail_route():
     paths = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         paths.append(request.url.path)
         if request.url.path == "/login":
             return httpx.Response(200, json={"token": "token-123"})
-        if request.url.path == "/accompanimentReport/report-1":
+        if request.url.path == "/accompanimentReport/current-1":
             return httpx.Response(200, json={"docs": []})
-        if request.url.path == "/accompaniments-previous/report-1":
+        if request.url.path == "/accompanimentReport/previous-1":
             return httpx.Response(200, json={"docs": []})
         raise AssertionError(f"unexpected request: {request.url.path}")
 
@@ -45,9 +45,9 @@ def test_client_fetches_current_and_previous_accompaniment_objects():
         http_client=httpx.Client(transport=httpx.MockTransport(handler), base_url="https://api.rinaacc.com.br"),
     )
 
-    assert client.get_current_accompaniment(" report-1 ") == {"docs": []}
-    assert client.get_previous_accompaniment("report-1") == {"docs": []}
-    assert paths == ["/login", "/accompanimentReport/report-1", "/accompaniments-previous/report-1"]
+    assert client.get_current_accompaniment(" current-1 ") == {"docs": []}
+    assert client.get_previous_accompaniment("previous-1") == {"docs": []}
+    assert paths == ["/login", "/accompanimentReport/current-1", "/accompanimentReport/previous-1"]
 
 
 def test_client_rejects_bad_response_shapes_and_empty_ids():
@@ -56,7 +56,7 @@ def test_client_rejects_bad_response_shapes_and_empty_ids():
             return httpx.Response(200, json={"token": "token-123"})
         if request.url.path == "/reports":
             return httpx.Response(200, json={"unexpected": True})
-        if request.url.path == "/accompanimentReport/report-1":
+        if request.url.path == "/accompanimentReport/current-1":
             return httpx.Response(200, json=[])
         raise AssertionError(f"unexpected request: {request.url.path}")
 
@@ -68,10 +68,10 @@ def test_client_rejects_bad_response_shapes_and_empty_ids():
 
     with pytest.raises(ValueError, match="Reports response"):
         client.get_reports()
-    with pytest.raises(ValueError, match="Report id cannot be empty"):
+    with pytest.raises(ValueError, match="Accompaniment id cannot be empty"):
         normalize_id(" ")
     with pytest.raises(ValueError, match="did not return an object"):
-        client.get_current_accompaniment("report-1")
+        client.get_current_accompaniment("current-1")
 
 
 def test_client_rejects_login_without_token_and_accepts_single_report():
@@ -106,4 +106,3 @@ def test_client_rejects_login_without_token_and_accepts_single_report():
     )
 
     assert client.get_reports() == [{"_id": "report-1"}]
-

@@ -40,26 +40,30 @@ class FakeRinaClient:
             },
         ]
 
-    def get_current_accompaniment(self, report_id):
-        self.current_calls.append(report_id)
+    def get_current_accompaniment(self, accompaniment_id):
+        self.current_calls.append(accompaniment_id)
         return {
-            "docs": [
-                {"_id": "current-1", "title": "Trigger fuel check", "description": "Normal", "status": True},
-                {"_id": "current-2", "title": "HISL check", "description": "Sem ocorrencia", "status": False},
-            ]
-        }
+            "current-1": {
+                "_id": "current-1",
+                "title": "Trigger fuel check",
+                "description": "Normal",
+                "status": True,
+            },
+            "current-2": {
+                "_id": "current-2",
+                "title": "HISL check",
+                "description": "Sem ocorrencia",
+                "status": False,
+            },
+        }[accompaniment_id]
 
-    def get_previous_accompaniment(self, report_id):
-        self.previous_calls.append(report_id)
+    def get_previous_accompaniment(self, accompaniment_id):
+        self.previous_calls.append(accompaniment_id)
         return {
-            "docs": [
-                {
-                    "_id": "previous-1",
-                    "title": "Historico",
-                    "description": "Gatilho anterior",
-                    "solutionDate": "2026-05-10T10:00:00Z",
-                }
-            ]
+            "_id": "previous-1",
+            "title": "Historico",
+            "description": "Gatilho anterior",
+            "solutionDate": "2026-05-10T10:00:00Z",
         }
 
 
@@ -69,8 +73,8 @@ def test_service_returns_only_items_with_trigger_terms_and_required_fields():
 
     items = service.list_trigger_items(initial_date="2026-05-01", final_date="2026-05-15")
 
-    assert client.current_calls == ["report-1"]
-    assert client.previous_calls == ["report-1"]
+    assert client.current_calls == ["current-1", "current-2"]
+    assert client.previous_calls == ["previous-1"]
     assert [item.title for item in items] == ["Trigger fuel check", "Historico"]
     assert [item.description for item in items] == ["Normal", "Gatilho anterior"]
     assert [item.resolved for item in items] == [True, True]
@@ -103,9 +107,9 @@ class PreviousServerErrorClient(FakeRinaClient):
             }
         ]
 
-    def get_previous_accompaniment(self, report_id):
-        self.previous_calls.append(report_id)
-        request = httpx.Request("GET", f"https://api.rinaacc.com.br/accompaniments-previous/{report_id}")
+    def get_previous_accompaniment(self, accompaniment_id):
+        self.previous_calls.append(accompaniment_id)
+        request = httpx.Request("GET", f"https://api.rinaacc.com.br/accompanimentReport/{accompaniment_id}")
         response = httpx.Response(500, request=request)
         raise httpx.HTTPStatusError("server error", request=request, response=response)
 
@@ -116,14 +120,14 @@ def test_service_ignores_previous_endpoint_500_and_keeps_current_items():
 
     items = service.list_trigger_items(initial_date="2026-05-01", final_date="2026-05-15")
 
-    assert client.current_calls == ["report-1"]
-    assert client.previous_calls == ["report-1"]
+    assert client.current_calls == ["current-1"]
+    assert client.previous_calls == ["previous-1"]
     assert [item.title for item in items] == ["Trigger fuel check"]
 
 
 class BadGatewayClient(PreviousServerErrorClient):
-    def get_current_accompaniment(self, report_id):
-        request = httpx.Request("GET", f"https://api.rinaacc.com.br/accompanimentReport/{report_id}")
+    def get_current_accompaniment(self, accompaniment_id):
+        request = httpx.Request("GET", f"https://api.rinaacc.com.br/accompanimentReport/{accompaniment_id}")
         response = httpx.Response(502, request=request)
         raise httpx.HTTPStatusError("bad gateway", request=request, response=response)
 

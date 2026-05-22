@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from rina_trigger_api.api import app, get_service
 from rina_trigger_api.client import RinaAccClient
+from rina_trigger_api.config import Settings, load_settings
 from rina_trigger_api.service import TriggerItemService
 
 
@@ -36,31 +37,23 @@ def test_integration_returns_trigger_items_from_api():
                     ]
                 },
             )
-        if request.url.path == "/accompanimentReport/report-1":
+        if request.url.path == "/accompanimentReport/current-1":
             return httpx.Response(
                 200,
                 json={
-                    "docs": [
-                        {
-                            "_id": "current-1",
-                            "title": "Trigger fuel check",
-                            "description": "Normal",
-                        }
-                    ]
+                    "_id": "current-1",
+                    "title": "Trigger fuel check",
+                    "description": "Normal",
                 },
             )
-        if request.url.path == "/accompaniments-previous/report-1":
+        if request.url.path == "/accompanimentReport/previous-1":
             return httpx.Response(
                 200,
                 json={
-                    "docs": [
-                        {
-                            "_id": "previous-1",
-                            "title": "Historico",
-                            "description": "HISL anterior",
-                            "status": False,
-                        }
-                    ]
+                    "_id": "previous-1",
+                    "title": "Historico",
+                    "description": "HISL anterior",
+                    "status": False,
                 },
             )
         raise AssertionError(f"unexpected request: {request.url.path}")
@@ -68,6 +61,7 @@ def test_integration_returns_trigger_items_from_api():
     app.dependency_overrides[get_service] = lambda: build_service_with_mock_transport(
         handler
     )
+    app.dependency_overrides[load_settings] = lambda: Settings("user@example.com", "secret")
     client = TestClient(app)
 
     try:
@@ -93,7 +87,7 @@ def test_integration_returns_trigger_items_from_api():
     ]
 
 
-def test_integration_returns_empty_when_no_trigger_terms():
+def test_integration_default_terms_include_gatilhos():
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/login":
             return httpx.Response(200, json={"token": "token-123"})
@@ -114,30 +108,22 @@ def test_integration_returns_empty_when_no_trigger_terms():
                     ]
                 },
             )
-        if request.url.path == "/accompanimentReport/report-1":
+        if request.url.path == "/accompanimentReport/current-1":
             return httpx.Response(
                 200,
                 json={
-                    "docs": [
-                        {
-                            "_id": "current-1",
-                            "title": "Door check",
-                            "description": "Sem ocorrencia",
-                        }
-                    ]
+                    "_id": "current-1",
+                    "title": "Door check",
+                    "description": "Sem ocorrencia",
                 },
             )
-        if request.url.path == "/accompaniments-previous/report-1":
+        if request.url.path == "/accompanimentReport/previous-1":
             return httpx.Response(
                 200,
                 json={
-                    "docs": [
-                        {
-                            "_id": "previous-1",
-                            "title": "Historico",
-                            "description": "Sem ocorrencia",
-                        }
-                    ]
+                    "_id": "previous-1",
+                    "title": "Gatilhos anteriores",
+                    "description": "Sem ocorrencia",
                 },
             )
         raise AssertionError(f"unexpected request: {request.url.path}")
@@ -145,6 +131,7 @@ def test_integration_returns_empty_when_no_trigger_terms():
     app.dependency_overrides[get_service] = lambda: build_service_with_mock_transport(
         handler
     )
+    app.dependency_overrides[load_settings] = lambda: Settings("user@example.com", "secret")
     client = TestClient(app)
 
     try:
@@ -156,4 +143,13 @@ def test_integration_returns_empty_when_no_trigger_terms():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == [
+        {
+            "audit_date": "10/05/2026",
+            "aircraft_prefix": "PT-ABC",
+            "operator": "Operator A",
+            "title": "Gatilhos anteriores",
+            "description": "Sem ocorrencia",
+            "resolved": None,
+        },
+    ]
